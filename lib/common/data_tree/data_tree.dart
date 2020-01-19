@@ -28,7 +28,7 @@ class DataTree {
       if (key is! String) {
         return;
       }
-      dataTreeNodeObject[key] = _parseMap(value);
+      dataTreeNodeObject[key] = _parseJson(value);
     });
     return dataTreeNodeObject;
   }
@@ -36,9 +36,42 @@ class DataTree {
   DataTreeNodeArray _parseList(List json) {
     DataTreeNodeArray dataTreeNodeArray = DataTreeNodeArray();
     json.forEach((dynamic value) {
-      dataTreeNodeArray.add(_parseMap(value));
+      dataTreeNodeArray.add(_parseJson(value));
     });
     return dataTreeNodeArray;
+  }
+
+  void printTree() {
+    _printTree(0, root);
+  }
+
+  void _printTree(int depth, DataTreeNode node) {
+    if (node == null) {
+      return;
+    }
+    depth++;
+    String hr = '-' * depth;
+    if (node is DataTreeNodeObject) {
+      node.forEach((String key, DataTreeNode node) {
+        print('$hr $key:');
+        print('$hr {');
+        _printTree(depth, node);
+        print('$hr }');
+      });
+    } else if (node is DataTreeNodeArray) {
+      node.forEach((DataTreeNode node) {
+        print('$hr [');
+        _printTree(depth, node);
+        print('$hr ]');
+      });
+    } else if (node is DataTreeNodeValue) {
+      print('$hr ${node.value}');
+    }
+  }
+
+  @override
+  String toString() {
+    return root?.toString();
   }
 }
 
@@ -53,7 +86,7 @@ class DataTreeNodeValue extends DataTreeNode {
 
   @override
   String toString() {
-    return value.toString();
+    return value?.toString();
   }
 }
 
@@ -65,6 +98,10 @@ class DataTreeNodeObject extends DataTreeNode {
   Iterable<String> get keys => _objectMap.keys;
 
   Iterable<DataTreeNode> get values => _objectMap.values;
+
+  void forEach(Function(String key, DataTreeNode node) callback) {
+    _objectMap.forEach(callback);
+  }
 
   DataTreeNode remove(String key) {
     DataTreeNode value = _objectMap.remove(key);
@@ -93,6 +130,10 @@ class DataTreeNodeArray extends DataTreeNode {
   int get length => _values.length;
 
   Iterable<DataTreeNode> get values => _values;
+
+  void forEach(Function(DataTreeNode node) callback) {
+    _values.forEach(callback);
+  }
 
   DataTreeNode removeAt(int index) {
     DataTreeNode value = _values.removeAt(index);
