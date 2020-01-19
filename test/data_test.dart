@@ -13,8 +13,6 @@ void main() {
         'page': 1,
       },
     );
-    print(httpData.data);
     DataTree dataTree = DataTree.fromJson(httpData.data);
-    dataTree.printTree();
   });
 }
