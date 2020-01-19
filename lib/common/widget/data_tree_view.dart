@@ -56,9 +56,24 @@ class _DataTreeViewState extends State<DataTreeView> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              DataTreeView(
-                dataTreeNode: DataTreeNodeValue(keys[index]),
-                depth: widget.depth,
+              GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext buildContext) {
+                      return AlertDialog(
+                        title: Text(keys[index]),
+                        content: Text(
+                          dataTreeNode[keys[index]].runtimeType.toString(),
+                        ),
+                      );
+                    },
+                  );
+                },
+                child: DataTreeView(
+                  dataTreeNode: DataTreeNodeValue(keys[index]),
+                  depth: widget.depth,
+                ),
               ),
               DataTreeView(
                 dataTreeNode: DataTreeNodeValue(':'),
