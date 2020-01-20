@@ -1,3 +1,5 @@
+import 'package:meta/meta.dart';
+
 class DataTree {
   DataTreeNode root;
 
@@ -6,6 +8,7 @@ class DataTree {
   factory DataTree.fromJson(dynamic json) {
     DataTree dataTree = DataTree();
     dataTree.root = dataTree._parseJson(json);
+    dataTree.root?.key = 'root';
     return dataTree;
   }
 
@@ -76,13 +79,35 @@ class DataTree {
 }
 
 abstract class DataTreeNode {
+  String key;
   DataTreeNode parent;
+
+  DataTreeNode getNode(String path) {
+    if (path == null || path.isEmpty) {
+      return null;
+    }
+    return getNodeFromList(path.split('->'), 0);
+  }
+
+  @protected
+  DataTreeNode getNodeFromList(List<String> paths, int startIndex);
 }
 
 class DataTreeNodeValue extends DataTreeNode {
   dynamic value;
 
   DataTreeNodeValue(this.value);
+
+  @override
+  DataTreeNode getNodeFromList(List<String> paths, int startIndex) {
+    if (startIndex < 0) {
+      return null;
+    }
+    if (startIndex == paths.length && paths.last == key) {
+      return this;
+    }
+    return null;
+  }
 
   @override
   String toString() {
@@ -106,6 +131,7 @@ class DataTreeNodeObject extends DataTreeNode {
   DataTreeNode remove(String key) {
     DataTreeNode value = _objectMap.remove(key);
     value?.parent = null;
+    value?.key = null;
     return value;
   }
 
@@ -115,7 +141,20 @@ class DataTreeNodeObject extends DataTreeNode {
 
   void operator []=(String key, DataTreeNode value) {
     value?.parent = this;
+    value?.key = key;
     _objectMap[key] = value;
+  }
+
+  @override
+  DataTreeNode getNodeFromList(List<String> paths, int startIndex) {
+    if (startIndex < 0) {
+      return null;
+    }
+    if (startIndex == paths.length) {
+      return this;
+    }
+    String path = paths[startIndex];
+    return this[path]?.getNodeFromList(paths, startIndex + 1);
   }
 
   @override
@@ -131,6 +170,14 @@ class DataTreeNodeArray extends DataTreeNode {
 
   Iterable<DataTreeNode> get values => _values;
 
+  @override
+  set key(String _key) {
+    super.key = _key;
+    _values.forEach((DataTreeNode node) {
+      node?.key = '$key[]';
+    });
+  }
+
   void forEach(Function(DataTreeNode node) callback) {
     _values.forEach(callback);
   }
@@ -138,16 +185,19 @@ class DataTreeNodeArray extends DataTreeNode {
   DataTreeNode removeAt(int index) {
     DataTreeNode value = _values.removeAt(index);
     value?.parent = null;
+    value?.key = null;
     return value;
   }
 
   bool remove(DataTreeNode value) {
     value?.parent = null;
+    value?.key = null;
     return _values.remove(value);
   }
 
   void add(DataTreeNode value) {
     value?.parent = this;
+    value?.key = key;
     _values.add(value);
   }
 
@@ -157,7 +207,19 @@ class DataTreeNodeArray extends DataTreeNode {
 
   void operator []=(int index, DataTreeNode value) {
     value?.parent = this;
+    value?.key = key;
     _values[index] = value;
+  }
+
+  @override
+  DataTreeNode getNodeFromList(List<String> paths, int startIndex) {
+    if (startIndex < 0) {
+      return null;
+    }
+    if (startIndex == paths.length && paths.last == key) {
+      return this;
+    }
+    return null;
   }
 
   @override

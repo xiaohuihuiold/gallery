@@ -4,11 +4,13 @@ import 'package:gallery/common/data_tree/data_tree.dart';
 class DataTreeView extends StatefulWidget {
   final DataTreeNode dataTreeNode;
   final int depth;
+  final Function(DataTreeNode node) onTap;
 
   const DataTreeView({
     Key key,
     this.dataTreeNode,
     this.depth = 0,
+    this.onTap,
   }) : super(key: key);
 
   @override
@@ -40,6 +42,7 @@ class _DataTreeViewState extends State<DataTreeView> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: List<Widget>.generate(dataTreeNode.length, (int index) {
           return DataTreeView(
+            onTap: widget.onTap,
             dataTreeNode: dataTreeNode[index],
             depth: widget.depth - 1,
           );
@@ -58,19 +61,12 @@ class _DataTreeViewState extends State<DataTreeView> {
             children: <Widget>[
               GestureDetector(
                 onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext buildContext) {
-                      return AlertDialog(
-                        title: Text(keys[index]),
-                        content: Text(
-                          dataTreeNode[keys[index]].runtimeType.toString(),
-                        ),
-                      );
-                    },
-                  );
+                  if (widget.onTap != null) {
+                    widget.onTap(dataTreeNode[keys[index]]);
+                  }
                 },
                 child: DataTreeView(
+                  onTap: widget.onTap,
                   dataTreeNode: DataTreeNodeValue(keys[index]),
                   depth: widget.depth,
                 ),
@@ -80,6 +76,7 @@ class _DataTreeViewState extends State<DataTreeView> {
                 depth: widget.depth,
               ),
               DataTreeView(
+                onTap: widget.onTap,
                 dataTreeNode: dataTreeNode[keys[index]],
                 depth: widget.depth + 1,
               ),
